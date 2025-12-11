@@ -3,10 +3,9 @@ using UnityEngine;
 
 public class SimulationModel : MonoBehaviour
 {
-    [SerializeField] private Grid grid;
 
-    private List<ICashRegister> registers;
-    private List<Customer> customers;
+    private List<ICashRegister> registers = new List<ICashRegister>();
+    private List<Customer> customers = new List<Customer>();
 
     [SerializeField] private float currentTime = 0f;
     [SerializeField] private float timeScale = 1f;
@@ -15,7 +14,6 @@ public class SimulationModel : MonoBehaviour
     private const float TIME_SCALE_X2 = 2f;
     private const float TIME_SCALE_X5 = 5f;
 
-    public Grid Grid => grid;
     public float CurrentTime => currentTime;
     public float TimeScale => timeScale;
     public List<ICashRegister> Registers => registers;
@@ -23,17 +21,6 @@ public class SimulationModel : MonoBehaviour
 
     void Start()
     {
-        registers = new List<ICashRegister>();
-        customers = new List<Customer>();
-
-        if (grid == null)
-        {
-            grid = GetComponent<Grid>();
-            if (grid == null)
-            {
-                Debug.LogWarning("Grid component not found! Please assign a Grid to SimulationModel.");
-            }
-        }
     }
 
     void Update()

@@ -1,16 +1,19 @@
 using System;
 using UnityEngine;
 using UnityEngine.Events;
+using System.Collections.Generic;
 
 public class SimulationController : MonoBehaviour
 {
     [SerializeField] private SimulationModel model;
     [SerializeField] private bool isRunning = false;
     [SerializeField] private bool isPaused = false;
+    [SerializeField] private SimulationView view;
 
-    [SerializeField] private float customerSpawnInterval = 2f;
+    [SerializeField] private float customerSpawnInterval = 4f;
     [SerializeField] private int minItems = 1;
     [SerializeField] private int maxItems = 20;
+    [SerializeField] private bool isDeleteMode = false;
     private float timeSinceLastSpawn = 0f;
     private int customerCounter = 0;
     public UnityEvent OnCustomerServed;
@@ -19,6 +22,7 @@ public class SimulationController : MonoBehaviour
     public UnityEvent OnSimulationStarted;
     public UnityEvent OnSimulationPaused;
     public UnityEvent OnSimulationReset;
+    public bool IsDeleteMode => isDeleteMode;
 
     void Awake()
     {
@@ -46,6 +50,60 @@ public class SimulationController : MonoBehaviour
             Tick(Time.deltaTime);
         }
     }
+    
+public void SpawnRegisters()
+{
+    if (model == null || view == null || view.GridView == null)
+    {
+        Debug.LogError("Grid or View missing!");
+        return;
+    }
+
+    int[,] positions = new int[,] 
+    { 
+        { 0, 0 }, 
+        { 20, 10 }, 
+        { 10, 2 } 
+    };
+
+    float registerWidthInCells = 2f;
+    float registerHeightInCells = 1f;
+
+    float cellSize = view.GridView.cellSize;
+
+    float offset = -0.5f * cellSize;
+
+    for (int i = 0; i < positions.GetLength(0); i++)
+    {
+        int startX = positions[i, 0];
+        int startY = positions[i, 1];
+
+        var register = new StaffedCashRegister(
+            $"Register_{i + 1}", 
+            QueueType.Normal, 
+            1f, 
+            0.01f
+        );
+
+        Vector3 basePos = view.GridView.GetRegisterSpawnPosition(startX, startY, registerWidthInCells, registerHeightInCells);
+
+        register.Position = basePos + new Vector3(offset, offset, 0f);
+
+        model.AddRegister(register);
+
+        Debug.Log($"✅ Register {register.Id} at GRID ({startX},{startY}) → WORLD {register.Position}");
+    }
+
+    view.RenderRegisters(model.Registers);
+}
+
+
+
+
+
+
+
+
 
     public void Tick(float deltaTime)
     {
@@ -61,10 +119,15 @@ public class SimulationController : MonoBehaviour
         CheckCustomerStatuses();
 
         CheckRegisterBreakdowns();
+        view.RenderRegisters(model.Registers);
+        view.RenderCustomers(model.Customers);
     }
+
 
     public void StartSimulation()
     {
+        view.RenderGrid();
+        SpawnRegisters();
         isRunning = true;
         isPaused = false;
         OnSimulationStarted?.Invoke();
@@ -155,13 +218,34 @@ public class SimulationController : MonoBehaviour
     public void SetCustomerSpawnInterval(float interval)
     {
         customerSpawnInterval = Mathf.Max(0.1f, interval);
+        Debug.Log("interval changed");
     }
 
-    public void SetItemRange(int min, int max)
+    public float GetCustomerSpawnInterval()
+    {
+        return customerSpawnInterval;
+    }
+
+    public void SetItemRange(int min, int max)     //TODO разбить на две функции
     {
         minItems = Mathf.Max(1, min);
         maxItems = Mathf.Max(minItems, max);
     }
+
+    public void OnRegisterClicked(string registerId)
+{
+    ICashRegister selectedRegister = model.Registers.Find(r => r.Id == registerId);
+    if (selectedRegister != null)
+    {
+        foreach (var reg in model.Registers)
+        {
+               reg.IsSelected = false; 
+        }
+
+        selectedRegister.IsSelected = true;
+    }
+} //TODO не используется, нуждается в доработке, дописать в диаграммы
+
 
     public void SetTimeScale(float scale)
     {
@@ -175,4 +259,75 @@ public class SimulationController : MonoBehaviour
     public bool IsRunning => isRunning;
     public bool IsPaused => isPaused;
     public SimulationModel Model => model;
+
+    public void RequestManualCustomerSpawn()
+    {
+    SpawnRandomCustomer();
+    }
+
+
+
+    private List<CustomerView> customerViews = new List<CustomerView>();
+
+    public void RemoveAllCustomers()
+    {
+        foreach (var view in customerViews)
+        {
+            if (view != null)
+                Destroy(view.gameObject);
+        }
+
+        customerViews.Clear();
+        model.Customers.Clear();
+
+        Debug.Log("All customers removed.");
+    }
+
+    public void RegisterCustomerView(CustomerView view)
+    {
+        if(!customerViews.Contains(view))
+            customerViews.Add(view);
+    }
+
+
+    public void RemoveCustomerSafe(Customer customer)
+{
+    if (customer == null) return;
+
+    model.RemoveCustomer(customer);
+
+    var view = customerViews.Find(v => v.Model == customer);
+    if(view != null)
+    {
+        Destroy(view.gameObject);
+        customerViews.Remove(view);
+    }
+
+    Debug.Log("Customer removed safely: " + customer.Id);
+}
+
+
+    public void EnableDeleteMode()
+    {
+        isDeleteMode = true;
+        Debug.Log("enable del mode");
+    }
+
+    public void DisableDeleteMode()
+    {
+        isDeleteMode = false;
+        Debug.Log("disable del mode");
+    }
+
+    public void ToggleDeleteMode()
+    {
+        isDeleteMode = !isDeleteMode;
+        Debug.Log("mode switched");
+    }
+
+    void Start()
+{
+    StartSimulation();
+}
+
 }

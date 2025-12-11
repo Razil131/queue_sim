@@ -1,9 +1,11 @@
 using System.Collections.Generic;
-
+using UnityEngine;
 
 public class SelfCheckout : ICashRegister
 {
     public string Id { get; private set; }
+    public bool IsSelected { get; set; }
+    public Vector3 Position { get; set; }
     public RegisterType Type { get; }
     public RegisterStatus Status { get; private set; }
     public QueueType QueueType { get; private set; }

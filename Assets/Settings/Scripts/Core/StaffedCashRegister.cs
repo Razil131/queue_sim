@@ -5,6 +5,8 @@ using UnityEngine;
 public class StaffedCashRegister : ICashRegister
 {
     public string Id { get; private set; }
+    public bool IsSelected { get; set; }
+    public Vector3 Position { get; set; }
     public RegisterType Type { get; private set; }
     public RegisterStatus Status { get; private set; }
     public QueueType QueueType { get; private set; }

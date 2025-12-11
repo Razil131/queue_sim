@@ -5,6 +5,7 @@ public class Customer
 {
     public string Id { get; private set; }
     public int Items { get; private set; }
+    public Vector3 Position { get; set; }
     private float itemsProcessedFloat = 0f;
     public int ItemsProcessed => Mathf.FloorToInt(itemsProcessedFloat);
     public float ServiceStartTime { get; set; }

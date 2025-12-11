@@ -1,8 +1,11 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 public interface ICashRegister
 {
     string Id { get; }
+    bool IsSelected { get; set; }
+    Vector3 Position { get; set; }
     RegisterType Type { get; }
     RegisterStatus Status { get; }
     QueueType QueueType { get; }
