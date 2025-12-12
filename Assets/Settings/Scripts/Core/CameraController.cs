@@ -19,7 +19,7 @@ public class CameraController : MonoBehaviour
 
     void HandleCameraPan()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(2))
         {
             if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
             Vector2 worldPoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -31,7 +31,7 @@ public class CameraController : MonoBehaviour
             }
         }
 
-        if (Input.GetMouseButtonUp(0))
+        if (Input.GetMouseButtonUp(2))
         {
             isDragging = false;
         }
