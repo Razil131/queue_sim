@@ -98,6 +98,12 @@ public class SimulationView : MonoBehaviour
 
         foreach (var key in keysToRemove)
         {
+            var obj = customerObjects[key];
+            var view = obj.GetComponent<CustomerView>();
+            if (view != null)
+            {
+                simulationController?.UnregisterCustomerView(view);
+            }
             Destroy(customerObjects[key]);
             customerObjects.Remove(key);
         }

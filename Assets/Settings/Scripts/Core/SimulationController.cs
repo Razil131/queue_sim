@@ -14,6 +14,7 @@ public class SimulationController : MonoBehaviour
     [SerializeField] private int minItems = 1;
     [SerializeField] private int maxItems = 20;
     [SerializeField] private bool isDeleteMode = false;
+    [SerializeField] private int CheckoutMax = 32;
     private float timeSinceLastSpawn = 0f;
     private int customerCounter = 0;
     public UnityEvent OnCustomerServed;
@@ -23,6 +24,8 @@ public class SimulationController : MonoBehaviour
     public UnityEvent OnSimulationPaused;
     public UnityEvent OnSimulationReset;
     public bool IsDeleteMode => isDeleteMode;
+
+    public SimulationView View => view;
 
     void Awake()
     {
@@ -71,8 +74,6 @@ public void SpawnRegisters()
 
     float cellSize = view.GridView.cellSize;
 
-    float offset = -0.5f * cellSize;
-
     for (int i = 0; i < positions.GetLength(0); i++)
     {
         int startX = positions[i, 0];
@@ -87,7 +88,7 @@ public void SpawnRegisters()
 
         Vector3 basePos = view.GridView.GetRegisterSpawnPosition(startX, startY, registerWidthInCells, registerHeightInCells);
 
-        register.Position = basePos + new Vector3(offset, offset, 0f);
+        register.Position = basePos;
 
         model.AddRegister(register);
 
@@ -130,6 +131,10 @@ public void SpawnRegisters()
         SpawnRegisters();
         isRunning = true;
         isPaused = false;
+        
+        var ui = FindAnyObjectByType<UIController>();
+        ui?.UpdateRegisterCountText();
+        
         OnSimulationStarted?.Invoke();
         Debug.Log("Simulation started");
     }
@@ -289,6 +294,12 @@ public void SpawnRegisters()
             customerViews.Add(view);
     }
 
+    public void UnregisterCustomerView(CustomerView view)
+    {
+        if (customerViews.Contains(view))
+            customerViews.Remove(view);
+    }
+
 
     public void RemoveCustomerSafe(Customer customer)
 {
@@ -323,6 +334,11 @@ public void SpawnRegisters()
     {
         isDeleteMode = !isDeleteMode;
         Debug.Log("mode switched");
+    }
+
+    public int GetCheckoutMax()
+    {
+        return CheckoutMax;
     }
 
     void Start()

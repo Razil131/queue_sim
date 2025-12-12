@@ -14,7 +14,7 @@ public class GridView : MonoBehaviour
 
     void Awake()
     {
-        originPosition = new Vector3(-width * cellSize / 2f, -height * cellSize / 2f, 0f);
+        originPosition = Vector3.zero;
     }
 
     public void CreateGrid()
@@ -34,16 +34,44 @@ public class GridView : MonoBehaviour
 
     public Vector3 GetCellWorldPosition(int x, int y)
     {
-        return originPosition + new Vector3(x * cellSize, y * cellSize, 0f);
+        return new Vector3(x * cellSize, y * cellSize, 0f);
     }
 
-    public Vector3 GetRegisterSpawnPosition(int startX, int startY, float registerWidthCells, float registerHeightCells)
+    public Vector3 GetRegisterSpawnPosition(int startX, int startY, float registerWidth, float registerHeight)
     {
-        Vector3 bottomLeft = GetCellWorldPosition(startX, startY);
+    float centerX = (startX + 0.5f) * cellSize;
+    float centerY = (startY) * cellSize;
 
-        float offsetX = registerWidthCells * cellSize / 2f;
-        float offsetY = registerHeightCells * cellSize / 2f;
+    return new Vector3(centerX, centerY, 0f);
+    }
 
-        return bottomLeft + new Vector3(offsetX, offsetY, 0f);
+    public Vector2Int WorldToGrid(Vector3 worldPos)
+    {
+        int x = Mathf.FloorToInt(worldPos.x / cellSize);
+        int y = Mathf.FloorToInt(worldPos.y / cellSize);
+        return new Vector2Int(x, y);
+    }
+
+    public Vector3 GetWorldPosition(Vector2Int gridPos)
+    {   
+        return GetCellWorldPosition(gridPos.x, gridPos.y);
+    }
+
+    public bool IsValidPos(Vector2Int pos)
+    {
+        return pos.x >= 0 && pos.x < width && pos.y >= 0 && pos.y < height;
+    }
+
+    public Vector2Int[] GetRegisterOccupiedPos(Vector2Int basePos, int width, int height)
+    {
+        System.Collections.Generic.List<Vector2Int> positions = new System.Collections.Generic.List<Vector2Int>();
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                positions.Add(new Vector2Int(basePos.x + x, basePos.y + y));
+            }
+        }
+        return positions.ToArray();
     }
 }
