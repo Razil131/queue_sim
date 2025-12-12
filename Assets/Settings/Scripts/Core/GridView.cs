@@ -14,7 +14,7 @@ public class GridView : MonoBehaviour
 
     void Awake()
     {
-        originPosition = Vector3.zero;
+        originPosition = new Vector3(-width * cellSize / 2f, -height * cellSize / 2f, 0f);
     }
 
     public void CreateGrid()
@@ -34,21 +34,24 @@ public class GridView : MonoBehaviour
 
     public Vector3 GetCellWorldPosition(int x, int y)
     {
-        return new Vector3(x * cellSize, y * cellSize, 0f);
+        return originPosition + new Vector3(x * cellSize, y * cellSize, 0f);
     }
 
-    public Vector3 GetRegisterSpawnPosition(int startX, int startY, float registerWidth, float registerHeight)
+    public Vector3 GetRegisterSpawnPosition(int startX, int startY, float registerWidthCells, float registerHeightCells)
     {
-    float centerX = (startX + 0.5f) * cellSize;
-    float centerY = (startY) * cellSize;
+        Vector3 bottomLeft = GetCellWorldPosition(startX, startY);
 
-    return new Vector3(centerX, centerY, 0f);
+        float offsetX = registerWidthCells * cellSize / 2f;
+        float offsetY = registerHeightCells * cellSize / 2f;
+
+        return bottomLeft + new Vector3(offsetX, offsetY, 0f);
     }
 
     public Vector2Int WorldToGrid(Vector3 worldPos)
     {
-        int x = Mathf.FloorToInt(worldPos.x / cellSize);
-        int y = Mathf.FloorToInt(worldPos.y / cellSize);
+        Vector3 localPos = worldPos - originPosition;
+        int x = Mathf.FloorToInt(localPos.x / cellSize);
+        int y = Mathf.FloorToInt(localPos.y / cellSize);
         return new Vector2Int(x, y);
     }
 

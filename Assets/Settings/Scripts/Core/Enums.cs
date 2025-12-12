@@ -16,3 +16,13 @@ public enum QueueType
     Normal,
     Priority
 }
+
+public enum CustomerState
+{
+    Idle,
+    WalkingToQueue,
+    InQueue,
+    WalkingToRegister,
+    BeingServed,
+    Served
+}

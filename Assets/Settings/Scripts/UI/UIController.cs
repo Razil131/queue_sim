@@ -23,7 +23,7 @@ public class UIController : MonoBehaviour
         if(intervalInput != null)
         {
             intervalInput.onEndEdit.AddListener(OnIntervalChanged);
-            intervalInput.text = simController != null ? simController.GetCustomerSpawnInterval().ToString("0") : "999";
+            intervalInput.text = simController != null ? (60/simController.GetCustomerSpawnInterval()).ToString("0") : "999";
         }
     }
 

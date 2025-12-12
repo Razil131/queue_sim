@@ -6,6 +6,7 @@ public interface ICashRegister
     string Id { get; }
     bool IsSelected { get; set; }
     Vector3 Position { get; set; }
+    Vector3 QueueDirection { get; set; }
     RegisterType Type { get; }
     RegisterStatus Status { get; }
     QueueType QueueType { get; }

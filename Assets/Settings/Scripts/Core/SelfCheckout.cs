@@ -6,6 +6,7 @@ public class SelfCheckout : ICashRegister
     public string Id { get; private set; }
     public bool IsSelected { get; set; }
     public Vector3 Position { get; set; }
+    public Vector3 QueueDirection { get; set; }
     public RegisterType Type { get; }
     public RegisterStatus Status { get; private set; }
     public QueueType QueueType { get; private set; }
@@ -27,6 +28,7 @@ public class SelfCheckout : ICashRegister
         ServiceSpeed = serviceSpeed;
         BreakProbability = breakProbability;
         Customers = new Queue<Customer>();
+        QueueDirection = new Vector3(-1f, 0f, 0f);
     }
 
     public bool IsAvailable()
@@ -37,10 +39,18 @@ public class SelfCheckout : ICashRegister
     public void Close()
     {
         Status = RegisterStatus.Closed;
+
+        if (NowServing != null)
+        {
+            NowServing.CurrentRegister = null;
+            NowServing = null;
+        }
+
         foreach (Customer customer in Customers)
         {
             customer.CurrentRegister = null;
         }
+        Customers.Clear();
     }
     public void Open()
     {
@@ -49,26 +59,102 @@ public class SelfCheckout : ICashRegister
 
     public void ProcessNextCustomer()
     {
+        if (NowServing != null) return;
+
         if (Customers.Count > 0 && Status == RegisterStatus.Open)
         {
             NowServing = Customers.Dequeue();
             NowServing.ServiceStartTime = UnityEngine.Time.time;
-            NowServing.CurrentRegister = this;
+            NowServing.StartWalkingToRegister();
+            NowServing.UpdateTargetPosition(Position);
+
+            UpdateQueuePositions();
+        }
+    }
+
+    private void UpdateQueuePositions()
+    {
+        int index = 0;
+        float spacingBetweenCustomers = 1f;
+
+        foreach (var customer in Customers)
+        {
+            Vector3 queuePosition = Position + (QueueDirection.normalized * spacingBetweenCustomers * (index + 1));
+            customer.UpdateTargetPosition(queuePosition);
+            index++;
         }
     }
 
     public void BreakDown()
     {
         Status = RegisterStatus.Broken;
+
+        if (NowServing != null)
+        {
+            NowServing.CurrentRegister = null;
+            NowServing = null;
+        }
+
+        foreach (var customer in Customers)
+        {
+            customer.CurrentRegister = null;
+        }
+        Customers.Clear();
     }
 
     public void Repair()
     {
         if (Status == RegisterStatus.Broken)
+        {
             Status = RegisterStatus.Open;
-
+            if (Customers.Count > 0 && NowServing == null)
+            {
+                ProcessNextCustomer();
+            }
+        }
     }
 
+    public void ClearNowServing()
+    {
+        NowServing = null;
+    }
 
+    public bool RemoveCustomerFromQueue(Customer customer)
+    {
+        if (NowServing == customer)
+        {
+            NowServing = null;
+            if (Customers.Count > 0)
+            {
+                ProcessNextCustomer();
+            }
+            return true;
+        }
+
+        var tempQueue = new Queue<Customer>();
+        bool found = false;
+
+        while (Customers.Count > 0)
+        {
+            var c = Customers.Dequeue();
+            if (c == customer)
+            {
+                found = true;
+            }
+            else
+            {
+                tempQueue.Enqueue(c);
+            }
+        }
+
+        Customers = tempQueue;
+
+        if (found)
+        {
+            UpdateQueuePositions();
+        }
+
+        return found;
+    }
 }
 // TODO сделать чтобы ксо как то отличалась от обычной кассы

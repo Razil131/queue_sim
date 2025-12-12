@@ -30,12 +30,14 @@ public class SimulationModel : MonoBehaviour
 
         foreach (var customer in customers)
         {
-            if (customer.NeedToChooseRegister() && !customer.AlreadyServed)
+            if (customer.NeedToChooseRegister())
             {
-                customer.ChooseRegister(registers);
+                customer.ChooseRegister(registers, customers);
             }
-            else
+
+            if (!customer.AlreadyServed)
             {
+                customer.UpdateMovement(deltaTime);
                 customer.UpdateProgress(deltaTime);
             }
         }

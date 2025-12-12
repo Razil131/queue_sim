@@ -62,11 +62,18 @@ public void SpawnRegisters()
         return;
     }
 
-    int[,] positions = new int[,] 
-    { 
-        { 0, 0 }, 
-        { 20, 10 }, 
-        { 10, 2 } 
+    int[,] positions = new int[,]
+    {
+        { 0, 0 },
+        { 20, 10 },
+        { 10, 2 }
+    };
+
+    Vector3[] queueDirections = new Vector3[]
+    {
+        new Vector3(-1f, 0f, 0f),
+        new Vector3(-1f, 0f, 0f),
+        new Vector3(-1f, 0f, 0f)
     };
 
     float registerWidthInCells = 2f;
@@ -74,25 +81,28 @@ public void SpawnRegisters()
 
     float cellSize = view.GridView.cellSize;
 
+    float offset = -0.5f * cellSize;
+
     for (int i = 0; i < positions.GetLength(0); i++)
     {
         int startX = positions[i, 0];
         int startY = positions[i, 1];
 
         var register = new StaffedCashRegister(
-            $"Register_{i + 1}", 
-            QueueType.Normal, 
-            1f, 
+            $"Register_{i + 1}",
+            QueueType.Normal,
+            1f,
             0.01f
         );
 
         Vector3 basePos = view.GridView.GetRegisterSpawnPosition(startX, startY, registerWidthInCells, registerHeightInCells);
 
-        register.Position = basePos;
+        register.Position = basePos + new Vector3(offset, offset, 0f);
+        register.QueueDirection = queueDirections[i];
 
         model.AddRegister(register);
 
-        Debug.Log($"✅ Register {register.Id} at GRID ({startX},{startY}) → WORLD {register.Position}");
+        Debug.Log($"✅ Register {register.Id} at GRID ({startX},{startY}) → WORLD {register.Position}, Queue Direction: {register.QueueDirection}");
     }
 
     view.RenderRegisters(model.Registers);
@@ -162,12 +172,21 @@ public void SpawnRegisters()
         timeSinceLastSpawn = 0f;
         customerCounter = 0;
 
-        model.Customers.Clear();
-
         foreach (var register in model.Registers)
         {
             register.Customers.Clear();
+            if (register is StaffedCashRegister staffed)
+            {
+                staffed.ClearNowServing();
+            }
+            else if (register is SelfCheckout selfCheckout)
+            {
+                selfCheckout.ClearNowServing();
+            }
         }
+
+        model.Customers.Clear();
+        customerViews.Clear();
 
         OnSimulationReset?.Invoke();
         Debug.Log("Simulation reset");
@@ -222,7 +241,7 @@ public void SpawnRegisters()
 
     public void SetCustomerSpawnInterval(float interval)
     {
-        customerSpawnInterval = Mathf.Max(0.1f, interval);
+        customerSpawnInterval = Mathf.Max(0.1f, 60/interval);
         Debug.Log("interval changed");
     }
 
@@ -234,6 +253,17 @@ public void SpawnRegisters()
     public void SetItemRange(int min, int max)     //TODO разбить на две функции
     {
         minItems = Mathf.Max(1, min);
+        maxItems = Mathf.Max(minItems, max);
+    }
+
+    public void SetMinItems(int min)
+    {
+        minItems = Mathf.Max(1, min);
+        maxItems = Mathf.Max(minItems, maxItems);
+    }
+
+    public void SetMaxItems(int max)
+    {
         maxItems = Mathf.Max(minItems, max);
     }
 
@@ -285,6 +315,19 @@ public void SpawnRegisters()
         customerViews.Clear();
         model.Customers.Clear();
 
+        foreach (var register in model.Registers)
+        {
+            register.Customers.Clear();
+            if (register is StaffedCashRegister staffed)
+            {
+                staffed.ClearNowServing();
+            }
+            else if (register is SelfCheckout selfCheckout)
+            {
+                selfCheckout.ClearNowServing();
+            }
+        }
+
         Debug.Log("All customers removed.");
     }
 
@@ -304,6 +347,18 @@ public void SpawnRegisters()
     public void RemoveCustomerSafe(Customer customer)
 {
     if (customer == null) return;
+
+    if (customer.CurrentRegister != null)
+    {
+        if (customer.CurrentRegister is StaffedCashRegister staffed)
+        {
+            staffed.RemoveCustomerFromQueue(customer);
+        }
+        else if (customer.CurrentRegister is SelfCheckout selfCheckout)
+        {
+            selfCheckout.RemoveCustomerFromQueue(customer);
+        }
+    }
 
     model.RemoveCustomer(customer);
 
