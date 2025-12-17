@@ -54,67 +54,59 @@ public class SimulationController : MonoBehaviour
         }
     }
     
-public void SpawnRegisters()
-{
-    if (model == null || view == null || view.GridView == null)
+    public void SpawnRegisters()
     {
-        Debug.LogError("Grid or View missing!");
-        return;
+        if (model == null || view == null || view.GridView == null)
+        {
+            Debug.LogError("Grid or View missing!");
+            return;
+        }
+
+        int[,] positions = new int[,]
+        {
+            { 0, 0 },
+            { 20, 10 },
+            { 10, 2 }
+        };
+
+        Vector3[] queueDirections = new Vector3[]
+        {
+            new Vector3(-1f, 0f, 0f),
+            new Vector3(-1f, 0f, 0f),
+            new Vector3(-1f, 0f, 0f)
+        };
+
+        float registerWidthInCells = 2f;
+        float registerHeightInCells = 1f;
+
+        float cellSize = view.GridView.cellSize;
+
+        //float offset = -0.5f * cellSize;
+
+        for (int i = 0; i < positions.GetLength(0); i++)
+        {
+            int startX = positions[i, 0];
+            int startY = positions[i, 1];
+
+            var register = new StaffedCashRegister(
+                $"Register_{i + 1}",
+                QueueType.Normal,
+                1f,
+                0.01f
+            );
+
+            Vector3 basePos = view.GridView.GetRegisterSpawnPosition(startX, startY, registerWidthInCells, registerHeightInCells);
+
+            register.Position = basePos;
+            register.QueueDirection = queueDirections[i];
+
+            model.AddRegister(register);
+
+            Debug.Log($"✅ Register {register.Id} at GRID ({startX},{startY}) → WORLD {register.Position}, Queue Direction: {register.QueueDirection}");
+        }
+
+        view.RenderRegisters(model.Registers);
     }
-
-    int[,] positions = new int[,]
-    {
-        { 0, 0 },
-        { 20, 10 },
-        { 10, 2 }
-    };
-
-    Vector3[] queueDirections = new Vector3[]
-    {
-        new Vector3(-1f, 0f, 0f),
-        new Vector3(-1f, 0f, 0f),
-        new Vector3(-1f, 0f, 0f)
-    };
-
-    float registerWidthInCells = 2f;
-    float registerHeightInCells = 1f;
-
-    float cellSize = view.GridView.cellSize;
-
-    float offset = -0.5f * cellSize;
-
-    for (int i = 0; i < positions.GetLength(0); i++)
-    {
-        int startX = positions[i, 0];
-        int startY = positions[i, 1];
-
-        var register = new StaffedCashRegister(
-            $"Register_{i + 1}",
-            QueueType.Normal,
-            1f,
-            0.01f
-        );
-
-        Vector3 basePos = view.GridView.GetRegisterSpawnPosition(startX, startY, registerWidthInCells, registerHeightInCells);
-
-        register.Position = basePos + new Vector3(offset, offset, 0f);
-        register.QueueDirection = queueDirections[i];
-
-        model.AddRegister(register);
-
-        Debug.Log($"✅ Register {register.Id} at GRID ({startX},{startY}) → WORLD {register.Position}, Queue Direction: {register.QueueDirection}");
-    }
-
-    view.RenderRegisters(model.Registers);
-}
-
-
-
-
-
-
-
-
 
     public void Tick(float deltaTime)
     {
@@ -250,7 +242,7 @@ public void SpawnRegisters()
         return customerSpawnInterval;
     }
 
-    public void SetItemRange(int min, int max)     //TODO разбить на две функции
+    public void SetItemRange(int min, int max)
     {
         minItems = Mathf.Max(1, min);
         maxItems = Mathf.Max(minItems, max);
