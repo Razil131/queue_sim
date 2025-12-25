@@ -48,6 +48,11 @@ public class SimulationController : MonoBehaviour
 
     void Update()
     {
+        if (model != null)
+        {
+            model.IsPaused = isPaused;
+        }
+
         if (isRunning && !isPaused)
         {
             Tick(Time.deltaTime);
@@ -64,16 +69,16 @@ public class SimulationController : MonoBehaviour
 
         int[,] positions = new int[,]
         {
-            { 0, 0 },
+            // { 0, 0 },
             { 20, 10 },
-            { 10, 2 }
+            // { 10, 2 }
         };
 
         Vector3[] queueDirections = new Vector3[]
         {
+            // new Vector3(-1f, 0f, 0f),
             new Vector3(-1f, 0f, 0f),
-            new Vector3(-1f, 0f, 0f),
-            new Vector3(-1f, 0f, 0f)
+            // new Vector3(-1f, 0f, 0f)
         };
 
         float registerWidthInCells = 2f;
@@ -112,7 +117,7 @@ public class SimulationController : MonoBehaviour
     {
         if (model == null) return;
 
-        timeSinceLastSpawn += deltaTime;
+        timeSinceLastSpawn += deltaTime*model.TimeScale;
         if (timeSinceLastSpawn >= customerSpawnInterval)
         {
             SpawnRandomCustomer();
@@ -144,8 +149,13 @@ public class SimulationController : MonoBehaviour
     public void PauseSimulation()
     {
         isPaused = !isPaused;
+        if (model != null)
+        {
+            model.IsPaused = isPaused;
+        }
+        
         OnSimulationPaused?.Invoke();
-        Debug.Log(isPaused ? "Simulation paused" : "Simulation resumed");
+        Debug.Log(isPaused ? "Simulation PAUSED" : "Simulation RESUMED");
     }
 
     public void StopSimulation()
@@ -171,10 +181,10 @@ public class SimulationController : MonoBehaviour
             {
                 staffed.ClearNowServing();
             }
-            else if (register is SelfCheckout selfCheckout)
-            {
-                selfCheckout.ClearNowServing();
-            }
+            // else if (register is SelfCheckout selfCheckout)
+            // {
+            //     selfCheckout.ClearNowServing();
+            // }
         }
 
         model.Customers.Clear();
@@ -210,7 +220,6 @@ public class SimulationController : MonoBehaviour
                 model.RemoveCustomer(customer);
                 Debug.Log($"{customer.Id} was served. Wait time: {customer.GetTotalWaitTime():F2}s");
             }
-            // TODO: Добавить логику для ушедших клентов
         }
     }
 
@@ -314,10 +323,10 @@ public class SimulationController : MonoBehaviour
             {
                 staffed.ClearNowServing();
             }
-            else if (register is SelfCheckout selfCheckout)
-            {
-                selfCheckout.ClearNowServing();
-            }
+            // else if (register is SelfCheckout selfCheckout)
+            // {
+            //     selfCheckout.ClearNowServing();
+            // }
         }
 
         Debug.Log("All customers removed.");
@@ -346,10 +355,10 @@ public class SimulationController : MonoBehaviour
         {
             staffed.RemoveCustomerFromQueue(customer);
         }
-        else if (customer.CurrentRegister is SelfCheckout selfCheckout)
-        {
-            selfCheckout.RemoveCustomerFromQueue(customer);
-        }
+        // else if (customer.CurrentRegister is SelfCheckout selfCheckout)
+        // {
+        //     selfCheckout.RemoveCustomerFromQueue(customer);
+        // }
     }
 
     model.RemoveCustomer(customer);

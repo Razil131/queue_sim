@@ -8,21 +8,23 @@ public class Customer
     public int Items { get; private set; }
     public Vector3 Position { get; set; }
     private float itemsProcessedFloat = 0f;
+    private float lastRecheckTime = 0f;
+    private const float RECHECK_INTERVAL = 1.5f;
     public int ItemsProcessed => Mathf.FloorToInt(itemsProcessedFloat);
     public float ServiceStartTime { get; set; }
     public float ServiceEndTime { get; set; }
     public ICashRegister CurrentRegister { get; set; }
     public Vector3 TargetPosition { get; private set; }
     public CustomerState State { get; private set; }
-
     public bool AlreadyServed => State == CustomerState.Served;
 
-    private const float SPAWN_AREA_MIN_X = 0f;
-    private const float SPAWN_AREA_MAX_X = 5f;
+    private readonly SimulationModel _model;
+    private const float SPAWN_AREA_MIN_X = -5f;
+    private const float SPAWN_AREA_MAX_X = -10f;
     private const float SPAWN_AREA_MIN_Y = 0f;
-    private const float SPAWN_AREA_MAX_Y = 5f;
+    private const float SPAWN_AREA_MAX_Y = 10f;
 
-    public Customer(string id, int items)
+    public Customer(string id, int items,  SimulationModel model)
     {
         Id = id;
         Items = items;
@@ -33,6 +35,7 @@ public class Customer
         State = CustomerState.Idle;
         Position = GetRandomSpawnPosition();
         TargetPosition = Position;
+        _model = model;
     }
 
     private Vector3 GetRandomSpawnPosition()
@@ -58,29 +61,35 @@ public class Customer
             return;
         }
 
-        ICashRegister bestRegister = SelectBestRegister(availableRegisters);
-
-        if (bestRegister != null)
-        {
-            CurrentRegister = bestRegister;
-            TargetPosition = CalculateQueuePosition(bestRegister, allCustomers);
-            State = CustomerState.WalkingToQueue;
-
-            Debug.Log($"{Id} chose {bestRegister.Id} (Queue: {bestRegister.Customers.Count}, Distance: {Vector3.Distance(Position, bestRegister.Position):F1})");
-        }
-    }
-
-    private ICashRegister SelectBestRegister(List<ICashRegister> availableRegisters)
-    {
         ICashRegister bestRegister = null;
         float bestScore = float.MaxValue;
 
         foreach (var register in availableRegisters)
         {
-            float distance = Vector3.Distance(Position, register.Position);
-            int queueLength = register.Customers.Count;
+            int walkingCount = register.WalkingCustomers.Count;
+            
+            if (allCustomers != null)
+            {
+                foreach (var c in allCustomers)
+                {
+                    if (c != this && 
+                        c.State == CustomerState.WalkingToQueue && 
+                        c.CurrentRegister == register)
+                    {
+                        walkingCount++;
+                    }
+                }
+            }
 
-            float score = distance + (queueLength * 300f);
+            int queueLength = register.Customers.Count;
+            int totalAhead = queueLength + walkingCount;
+
+            float spacing = register.SPACING_BETWEEN_CUSTOMERS;
+            Vector3 queueDirection = register.QueueDirection.normalized;
+            Vector3 queueEndPosition = register.Position + queueDirection * spacing * (totalAhead + 1);
+
+            float distance = Vector3.Distance(Position, queueEndPosition);
+            float score = distance + totalAhead*2;
 
             if (score < bestScore)
             {
@@ -89,28 +98,17 @@ public class Customer
             }
         }
 
-        return bestRegister;
-    }
-
-    private Vector3 CalculateQueuePosition(ICashRegister register, List<Customer> allCustomers)
-    {
-        int walkingToQueueCount = 0;
-        if (allCustomers != null)
+        if (bestRegister != null)
         {
-            foreach (var c in allCustomers)
-            {
-                if (c.State == CustomerState.WalkingToQueue && c.CurrentRegister == register && c != this)
-                {
-                    walkingToQueueCount++;
-                }
-            }
+            CurrentRegister = bestRegister;
+            State = CustomerState.WalkingToQueue;
+            bestRegister.RegisterWalkingCustomer(this);
+            
+            Debug.Log($"{Id} is WALKING to {bestRegister.Id} (Estimated position: {bestRegister.Customers.Count + bestRegister.WalkingCustomers.Count + 1})");        
         }
-
-        int positionInQueue = register.Customers.Count + walkingToQueueCount;
-        float spacingBetweenCustomers = 1f;
-        Vector3 offset = register.QueueDirection.normalized * spacingBetweenCustomers * positionInQueue;
-        return register.Position + offset;
     }
+
+
 
     public void UpdateProgress(float deltaTime)
     {
@@ -131,18 +129,133 @@ public class Customer
                 staffed.ClearNowServing();
                 tempRegister.ProcessNextCustomer();
             }
-            else if (tempRegister is SelfCheckout selfCheckout)
+            // else if (tempRegister is SelfCheckout selfCheckout)
+            // {
+            //     selfCheckout.ClearNowServing();
+            //     tempRegister.ProcessNextCustomer();
+            // }
+        }
+    }
+
+    private void RecheckBestRegister()
+    {
+        if (CurrentRegister == null || !CurrentRegister.IsAvailable())
+        {
+            SwitchToBestAvailableRegister();
+            return;
+        }
+
+        var allRegisters = _model.Registers;
+        var availableRegisters = allRegisters.Where(r => r.IsAvailable()).ToList();
+
+        if (availableRegisters.Count == 0) return;
+
+        float currentScore = CalculateRegisterScore(CurrentRegister);
+
+        ICashRegister bestAlternative = null;
+        float bestScore = currentScore * 0.8f;
+
+        foreach (var register in availableRegisters)
+        {
+            if (register == CurrentRegister) continue;
+            
+            float score = CalculateRegisterScore(register);
+            if (score < bestScore)
             {
-                selfCheckout.ClearNowServing();
-                tempRegister.ProcessNextCustomer();
+                bestScore = score;
+                bestAlternative = register;
             }
+        }
+
+        if (bestAlternative != null)
+        {
+            Debug.Log($"{Id} SWITCHING from {CurrentRegister.Id} to {bestAlternative.Id} " +
+                    $"(Old score: {currentScore:F1}, New score: {bestScore:F1})");
+            SwitchRegister(bestAlternative);
+        }
+    }
+
+    private float CalculateRegisterScore(ICashRegister register)
+    {
+        int walkingCount = register.WalkingCustomers.Count(c => 
+            c != this && 
+            c.State == CustomerState.WalkingToQueue
+        );
+        
+        int queueLength = register.Customers.Count;
+        int totalAhead = queueLength + walkingCount;
+
+        float spacing = register.SPACING_BETWEEN_CUSTOMERS;
+        Vector3 queueDirection = register.QueueDirection.normalized;
+        Vector3 queueEndPosition = register.Position + queueDirection * spacing * (totalAhead + 1);
+
+        float distance = Vector3.Distance(Position, queueEndPosition);
+        return distance + totalAhead * 3f;
+    }
+
+    private void SwitchRegister(ICashRegister newRegister)
+    {
+        if (CurrentRegister != null)
+        {
+            CurrentRegister.RemoveWalkingCustomer(this);
+        }
+
+        CurrentRegister = newRegister;
+        newRegister.RegisterWalkingCustomer(this);
+
+        Vector3 newPosition = CalculateQueueEndPosition(newRegister);
+        UpdateTargetPosition(newPosition);
+    }
+
+    private Vector3 CalculateQueueEndPosition(ICashRegister register)
+    {
+        int walkingCount = register.WalkingCustomers.Count(c => 
+            c != this && 
+            c.State == CustomerState.WalkingToQueue
+        );
+        
+        int queueLength = register.Customers.Count;
+        int totalAhead = queueLength + walkingCount;
+
+        float spacing = register.SPACING_BETWEEN_CUSTOMERS;
+        Vector3 queueDirection = register.QueueDirection.normalized;
+        return register.Position + queueDirection * spacing * (totalAhead + 1);
+    }
+
+    private void SwitchToBestAvailableRegister()
+    {
+        var availableRegisters = _model.Registers.Where(r => r.IsAvailable()).ToList();
+        if (availableRegisters.Count == 0) return;
+
+        ICashRegister bestRegister = null;
+        float bestScore = float.MaxValue;
+
+        foreach (var register in availableRegisters)
+        {
+            float score = CalculateRegisterScore(register);
+            if (score < bestScore)
+            {
+                bestScore = score;
+                bestRegister = register;
+            }
+        }
+
+        if (bestRegister != null)
+        {
+            SwitchRegister(bestRegister);
         }
     }
 
     public void UpdateMovement(float deltaTime)
     {
-        float distanceToTarget = Vector3.Distance(Position, TargetPosition);
+        if (State == CustomerState.WalkingToQueue && 
+            Time.time - lastRecheckTime > RECHECK_INTERVAL)
+        {
+            RecheckBestRegister();
+            lastRecheckTime = Time.time;
+        }
 
+        float distanceToTarget = Vector3.Distance(Position, TargetPosition);
         if (distanceToTarget > 0.1f)
         {
             float moveSpeed = 2f;
@@ -160,11 +273,12 @@ public class Customer
     {
         if (State == CustomerState.WalkingToQueue && CurrentRegister != null)
         {
-            CurrentRegister.Customers.Enqueue(this);
             State = CustomerState.InQueue;
-            Debug.Log($"{Id} reached queue position and joined {CurrentRegister.Id}'s queue");
-
-            if (CurrentRegister.NowServing == null)
+            Debug.Log($"{Id} reached physical queue position at {CurrentRegister.Id}");
+            
+            CurrentRegister.AddCustomerFromWalking(this);
+            
+            if (CurrentRegister.NowServing == null && CurrentRegister.IsAvailable())
             {
                 CurrentRegister.ProcessNextCustomer();
             }

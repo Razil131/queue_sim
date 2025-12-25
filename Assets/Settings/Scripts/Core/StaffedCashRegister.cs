@@ -7,6 +7,7 @@ public class StaffedCashRegister : ICashRegister
     public string Id { get; private set; }
     public bool IsSelected { get; set; }
     public Vector3 Position { get; set; }
+    public Vector3 QueueLastPosition { get; set; }
     public Vector3 QueueDirection { get; set; }
     public RegisterType Type { get; private set; }
     public RegisterStatus Status { get; private set; }
@@ -14,13 +15,15 @@ public class StaffedCashRegister : ICashRegister
     public float ServiceSpeed { get; set; }
     public float BreakProbability { get; set; }
     public Queue<Customer> Customers { get; private set; }
-
+     public List<Customer> WalkingCustomers { get; private set; } = new List<Customer>();
     public Customer NowServing { get; private set; }
+    public float SPACING_BETWEEN_CUSTOMERS { get; }
 
 
 
     public StaffedCashRegister(string id, QueueType queueType, float serviceSpeed, float breakProbability)
     {
+        SPACING_BETWEEN_CUSTOMERS = 1f;
         Id = id;
         Type = RegisterType.Staffed;
         Status = RegisterStatus.Open;
@@ -72,34 +75,65 @@ public class StaffedCashRegister : ICashRegister
         }
     }
 
-    private void UpdateQueuePositions()
-    {
-        int index = 0;
-        float spacingBetweenCustomers = 1f;
 
+    public void UpdateQueuePositions()
+    {
+        int positionIndex = 1;
         foreach (var customer in Customers)
         {
-            Vector3 queuePosition = Position + (QueueDirection.normalized * spacingBetweenCustomers * (index + 1));
+            if (customer.State == CustomerState.BeingServed || customer.State == CustomerState.Served) continue;
+            Vector3 queuePosition = Position + (QueueDirection.normalized * SPACING_BETWEEN_CUSTOMERS * positionIndex);
             customer.UpdateTargetPosition(queuePosition);
-            index++;
+            positionIndex++;
+        }
+
+        foreach (var customer in WalkingCustomers)
+        {
+            Vector3 queuePosition = Position + (QueueDirection.normalized * SPACING_BETWEEN_CUSTOMERS * positionIndex);
+            customer.UpdateTargetPosition(queuePosition);
+            positionIndex++;
         }
     }
 
+    public void RegisterWalkingCustomer(Customer customer)
+    {
+        WalkingCustomers.Add(customer);
+        UpdateQueuePositions();
+    }
+    
+    public void AddCustomerFromWalking(Customer customer)
+    {
+        if (WalkingCustomers.Remove(customer))
+        {
+            Customers.Enqueue(customer);
+            UpdateQueuePositions();
+            Debug.Log($"{customer.Id} physically joined queue at {Id}");
+        }
+    }
+    public void RemoveWalkingCustomer(Customer customer)
+    {
+        if (WalkingCustomers.Remove(customer))
+        {
+            UpdateQueuePositions();
+            Debug.Log($"{customer.Id} removed from walking list of {Id}");
+        }
+}
+
     public void BreakDown()
     {
-        Status = RegisterStatus.Broken;
+        // Status = RegisterStatus.Broken; //TODO раскоменьтить
 
-        if (NowServing != null)
-        {
-            NowServing.CurrentRegister = null;
-            NowServing = null;
-        }
+        // if (NowServing != null)
+        // {
+        //     NowServing.CurrentRegister = null;
+        //     NowServing = null;
+        // }
 
-        foreach (var customer in Customers)
-        {
-            customer.CurrentRegister = null;
-        }
-        Customers.Clear();
+        // foreach (var customer in Customers)
+        // {
+        //     customer.CurrentRegister = null;
+        // }
+        // Customers.Clear();
     }
 
     public void Repair()
@@ -154,6 +188,7 @@ public class StaffedCashRegister : ICashRegister
             UpdateQueuePositions();
         }
 
+        if (found) UpdateQueuePositions();
         return found;
     }
 }

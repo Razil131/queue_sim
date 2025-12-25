@@ -13,7 +13,7 @@ public class SimulationModel : MonoBehaviour
     private const float TIME_SCALE_X1 = 1f;
     private const float TIME_SCALE_X2 = 2f;
     private const float TIME_SCALE_X5 = 5f;
-
+    private bool _isPaused = false;
     public float CurrentTime => currentTime;
     public float TimeScale => timeScale;
     public List<ICashRegister> Registers => registers;
@@ -25,14 +25,21 @@ public class SimulationModel : MonoBehaviour
 
     void Update()
     {
+        if (IsPaused) 
+        {
+            return;
+        }
+
         float deltaTime = Time.deltaTime * timeScale;
         currentTime += deltaTime;
 
-        foreach (var customer in customers)
+        for (int i = customers.Count - 1; i >= 0; i--)
         {
+            var customer = customers[i];
+            
             if (customer.NeedToChooseRegister())
             {
-                customer.ChooseRegister(registers, customers);
+                customer.ChooseRegister(Registers, Customers);
             }
 
             if (!customer.AlreadyServed)
@@ -40,9 +47,21 @@ public class SimulationModel : MonoBehaviour
                 customer.UpdateMovement(deltaTime);
                 customer.UpdateProgress(deltaTime);
             }
+            else if (customer.ServiceEndTime > 0 && Time.time - customer.ServiceEndTime > 2f) 
+            {
+                RemoveCustomer(customer);
+            }
         }
     }
 
+    public bool IsPaused
+    {
+        get => _isPaused;
+        set
+        {
+            _isPaused = value;
+        }
+    }
     public void SetTimeScale(float scale)
     {
         if (scale > 0f)
@@ -77,7 +96,7 @@ public class SimulationModel : MonoBehaviour
 
     public void SpawnCustomer(string id, int items)
     {
-        Customer newCustomer = new Customer(id, items);
+        Customer newCustomer = new Customer(id, items, this);
         customers.Add(newCustomer);
     }
 

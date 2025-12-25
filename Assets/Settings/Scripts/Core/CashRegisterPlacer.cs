@@ -205,17 +205,15 @@ public class CashRegisterPlacer : MonoBehaviour
 
     bool IsClickOnBackground()
     {
-        // ❗️Проверяем, нажал ли ты на UI
         if (EventSystem.current.IsPointerOverGameObject())
         {
-            return false; // ❗️Клик на UI — не ставим кассу
+            return false;
         }
 
         Vector3 mousePos = Input.mousePosition;
         Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(mousePos);
         mouseWorldPos.z = 0f;
 
-        // ❗️Raycast на Background
         RaycastHit2D hit = Physics2D.Raycast(mouseWorldPos, Vector2.zero);
 
         if (hit.collider != null)

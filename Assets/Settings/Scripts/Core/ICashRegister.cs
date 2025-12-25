@@ -14,10 +14,16 @@ public interface ICashRegister
     float BreakProbability { get; set; }
     Queue<Customer> Customers { get; }
     Customer NowServing { get; }
+    float SPACING_BETWEEN_CUSTOMERS { get; }
+    List<Customer> WalkingCustomers { get; }
+    void RegisterWalkingCustomer(Customer customer);
+    void AddCustomerFromWalking(Customer customer);
+    void RemoveWalkingCustomer(Customer customer);
     bool IsAvailable();
     void Close();
     void Open();
     void ProcessNextCustomer();
+    void UpdateQueuePositions();
     void BreakDown();
     void Repair();
 }
