@@ -9,6 +9,8 @@ public class UIController : MonoBehaviour
     [SerializeField] SimulationModel model;
     [SerializeField] private SimulationController simController;
     [SerializeField] private TMP_InputField intervalInput;
+    [SerializeField] private TMP_InputField minInput;
+    [SerializeField] private TMP_InputField maxInput;
     [SerializeField] private GameObject GeneralSettingsPanel;
     [SerializeField] private GameObject openMenuButton;
     [SerializeField] private CashRegisterPlacer cashRegisterPlacer;
@@ -25,6 +27,18 @@ public class UIController : MonoBehaviour
             intervalInput.onEndEdit.AddListener(OnIntervalChanged);
             intervalInput.text = simController != null ? (60/simController.GetCustomerSpawnInterval()).ToString("0") : "999";
         }
+
+        if(minInput != null)
+        {
+            minInput.onEndEdit.AddListener(OnMinItemsChanged);
+            minInput.text = simController != null ? simController.GetMinItems().ToString("0") : "999";
+        }
+
+        if(maxInput != null)
+        {
+            maxInput.onEndEdit.AddListener(OnMaxItemsChanged);
+            maxInput.text = simController != null ? simController.GetMaxItems().ToString("0") : "999";
+        }
     }
 
     void Update()
@@ -35,6 +49,16 @@ public class UIController : MonoBehaviour
         }
 
         UpdateRegisterCountText();
+
+        if (Input.GetKeyDown(KeyCode.Tab))
+        {
+            OpenButtonClicked();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            CloseButtonClicked();
+        }
     }
 
     void Start()
@@ -74,6 +98,22 @@ public class UIController : MonoBehaviour
         if(float.TryParse(inputText, out float value))
         {
             simController.SetCustomerSpawnInterval(value);
+        }
+    }
+
+    private void OnMinItemsChanged(string inputText)
+    {
+        if(int.TryParse(inputText, out int value))
+        {
+            simController.SetMinItems(value);
+        }
+    }
+
+    private void OnMaxItemsChanged(string inputText)
+    {
+        if(int.TryParse(inputText, out int value))
+        {
+            simController.SetMaxItems(value);
         }
     }
 
@@ -122,7 +162,10 @@ public class UIController : MonoBehaviour
     {
     int maxRegisters = simController.GetCheckoutMax();
     cashRegisterPlacer.EnablePlaceMode(maxRegisters);
-    simController.PauseSimulation();
+    if(simController.IsPaused == false)
+        {
+        simController.PauseSimulation();
+        }
     addRegisterModeOnButton.SetActive(false);
     addRegisterModeOffButton.SetActive(true);
     }   
@@ -130,18 +173,29 @@ public class UIController : MonoBehaviour
     public void OnCancelPlacementClicked()
     {
         cashRegisterPlacer.DisablePlaceMode();
+        if(simController.IsPaused == true)
+        {
         simController.PauseSimulation();
+        }
         addRegisterModeOffButton.SetActive(false);
         addRegisterModeOnButton.SetActive(true);
     }
 
     
     }
+    //FIXME это исправить
+    /*
+    1) исправить удаление клиентов на кассах
+    */
+
     //TODO это сделать
     /*
-    Вернуть кнопку прекращения выставления касс
-    Пофиксить обводку при наведении так и не понял она сломана или нет
-    Доделать поля в основном меню
-    Сделать паузу на пробел
-    Сделать меню касс
+    1) панельку кассы
+    2) кассы должны сами чиница
+    3) хотя бы заглушки для статистики
+    4) кассы можно удалять через панельку
+    5) пауза на пробел
+    6) мастабирование камеры на колесико
+    7) прогрессбар для клиента и количество товаров в идеале
+    
     */

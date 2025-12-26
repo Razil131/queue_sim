@@ -43,6 +43,11 @@ public class SimulationView : MonoBehaviour
                 if (viewComp != null)
                 {
                     viewComp.Initialize(register.Id);
+
+                     if (register is StaffedCashRegister staffedRegister)
+                    {
+                        staffedRegister.SetView(viewComp);
+                    }
                 }
 
                 newObj.transform.position = register.Position;

@@ -18,6 +18,7 @@ public class StaffedCashRegister : ICashRegister
      public List<Customer> WalkingCustomers { get; private set; } = new List<Customer>();
     public Customer NowServing { get; private set; }
     public float SPACING_BETWEEN_CUSTOMERS { get; }
+    private CashRegisterView view;
 
 
 
@@ -34,6 +35,10 @@ public class StaffedCashRegister : ICashRegister
         QueueDirection = new Vector3(-1f, 0f, 0f);
     }
 
+    public void SetView(CashRegisterView view)
+    {
+        this.view = view;
+    }
     public bool IsAvailable()
     {
         return Status == RegisterStatus.Open;
@@ -121,19 +126,19 @@ public class StaffedCashRegister : ICashRegister
 
     public void BreakDown()
     {
-        // Status = RegisterStatus.Broken; //TODO раскоменьтить
+        Status = RegisterStatus.Broken; //TODO раскоменьтить
+        view?.SetBroken();
+        if (NowServing != null)
+        {
+            NowServing.CurrentRegister = null;
+            NowServing = null;
+        }
 
-        // if (NowServing != null)
-        // {
-        //     NowServing.CurrentRegister = null;
-        //     NowServing = null;
-        // }
-
-        // foreach (var customer in Customers)
-        // {
-        //     customer.CurrentRegister = null;
-        // }
-        // Customers.Clear();
+        foreach (var customer in Customers)
+        {
+            customer.CurrentRegister = null;
+        }
+        Customers.Clear();
     }
 
     public void Repair()
@@ -141,6 +146,7 @@ public class StaffedCashRegister : ICashRegister
         if (Status == RegisterStatus.Broken)
         {
             Status = RegisterStatus.Open;
+            view?.SetFixed();
             if (Customers.Count > 0 && NowServing == null)
             {
                 ProcessNextCustomer();

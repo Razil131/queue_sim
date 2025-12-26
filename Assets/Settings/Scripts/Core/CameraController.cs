@@ -9,12 +9,29 @@ public class CameraController : MonoBehaviour
     public Vector2 maxBounds;
     public LayerMask layer;
 
+    public Camera cam;
+    public float maxZoom = 20;
+    public float minZoom = 5;
+    public float speed = 30f;
+    private float targetZoom;
     private Vector3 lastMousePosition;
     private bool isDragging = false;
-
+    void Start()
+    {
+        targetZoom = cam.orthographicSize;
+    }
     void Update()
     {
         HandleCameraPan();
+
+        float scroll = Input.mouseScrollDelta.y;
+        if (scroll != 0)
+        {
+            targetZoom -= scroll * speed * 0.1f;
+            targetZoom = Mathf.Clamp(targetZoom, minZoom, maxZoom);
+        }
+
+        cam.orthographicSize = Mathf.MoveTowards(cam.orthographicSize, targetZoom, speed);
     }
 
     void HandleCameraPan()

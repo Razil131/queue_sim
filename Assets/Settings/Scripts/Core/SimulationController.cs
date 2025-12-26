@@ -57,6 +57,11 @@ public class SimulationController : MonoBehaviour
         {
             Tick(Time.deltaTime);
         }
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            PauseSimulation();
+        }
     }
     
     public void SpawnRegisters()
@@ -266,6 +271,16 @@ public class SimulationController : MonoBehaviour
     public void SetMaxItems(int max)
     {
         maxItems = Mathf.Max(minItems, max);
+    }
+
+    public int GetMinItems()
+    {
+        return minItems;
+    }
+
+    public int GetMaxItems()
+    {
+        return maxItems;
     }
 
     public void OnRegisterClicked(string registerId)
