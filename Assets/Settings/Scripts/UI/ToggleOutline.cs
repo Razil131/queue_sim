@@ -35,4 +35,19 @@ public class TripleToggle : MonoBehaviour
     OnToggleSelected?.Invoke(index);
     }
     
+    public void SetStateByIndex(int index)
+    {
+        if (index >= 0 && index < toggles.Length)
+        {
+            for (int i = 0; i < toggles.Length; i++)
+            {
+                toggles[i].SetIsOnWithoutNotify(false);
+                outlines[i].SetActive(false);
+            }
+
+            toggles[index].SetIsOnWithoutNotify(true);
+            outlines[index].SetActive(true);
+        }
+    }
+
 }

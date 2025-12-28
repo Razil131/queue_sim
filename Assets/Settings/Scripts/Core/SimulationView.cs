@@ -26,7 +26,7 @@ public class SimulationView : MonoBehaviour
     }
 
 
-        public void RenderRegisters(List<ICashRegister> registers)
+    public void RenderRegisters(List<ICashRegister> registers)
     {
         foreach (var register in registers)
         {
@@ -34,6 +34,11 @@ public class SimulationView : MonoBehaviour
             {
                 GameObject obj = registerObjects[register.Id];
                 obj.transform.position = register.Position;
+
+                if (register is StaffedCashRegister staffedRegister)
+                {
+                    staffedRegister.SetProgress();
+                }
             }
             else
             {
@@ -44,9 +49,29 @@ public class SimulationView : MonoBehaviour
                 {
                     viewComp.Initialize(register.Id);
 
-                     if (register is StaffedCashRegister staffedRegister)
+                    if (register is StaffedCashRegister staffedRegister)
                     {
                         staffedRegister.SetView(viewComp);
+                        staffedRegister.SetProgress();
+                    }
+
+                    var panelTransform = newObj.transform.Find("Canvas/CashRegisterUIPanel");
+                    if (panelTransform != null)
+                    {
+                        var panelController = panelTransform.GetComponent<CashRegisterUIPanel>();
+                        if (panelController != null)
+                        {
+                            Debug.Log("Found panel controller, initializing...");
+                            panelController.Initialize(register);
+                        }
+                        else
+                        {
+                            Debug.LogError("CashRegisterUIPanel component not found on UIPanel");
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogError("UIPanel not found in CashRegister prefab");
                     }
                 }
 

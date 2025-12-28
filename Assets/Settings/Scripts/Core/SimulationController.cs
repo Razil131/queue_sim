@@ -56,6 +56,13 @@ public class SimulationController : MonoBehaviour
         if (isRunning && !isPaused)
         {
             Tick(Time.deltaTime);
+            foreach (var register in model.Registers)
+            {
+                if(register is StaffedCashRegister staffedRegister)
+                {
+                    staffedRegister.SetProgress();
+                }
+            }
         }
 
         if (Input.GetKeyDown(KeyCode.Space))

@@ -62,6 +62,7 @@ public class StaffedCashRegister : ICashRegister
     }
     public void Open()
     {
+        view?.SetFixed();
         Status = RegisterStatus.Open;
     }
 
@@ -77,6 +78,8 @@ public class StaffedCashRegister : ICashRegister
             NowServing.UpdateTargetPosition(Position);
 
             UpdateQueuePositions();
+
+            view?.SetProgress(GetProgress());
         }
     }
 
@@ -196,5 +199,19 @@ public class StaffedCashRegister : ICashRegister
 
         if (found) UpdateQueuePositions();
         return found;
+    }
+
+    public float GetProgress()
+    {
+        if(NowServing == null || NowServing.Items == 0 ) return 0f;
+        float items = NowServing.Items;
+        float itemsProcessed = NowServing.ItemsProcessed;
+        float newWidth = itemsProcessed/items;
+        return Mathf.Clamp01(newWidth);
+    }
+
+    public void SetProgress()
+    {
+        view.SetProgress(GetProgress());
     }
 }

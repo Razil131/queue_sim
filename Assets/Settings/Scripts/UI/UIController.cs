@@ -17,6 +17,9 @@ public class UIController : MonoBehaviour
     [SerializeField] private TMP_Text registerCountText;
     [SerializeField] private GameObject addRegisterModeOnButton;
     [SerializeField] private GameObject addRegisterModeOffButton;
+    [SerializeField] private GameObject exitMenu;
+
+    private bool isMenuActive = true;
     
     void Awake()
     {
@@ -39,6 +42,10 @@ public class UIController : MonoBehaviour
             maxInput.onEndEdit.AddListener(OnMaxItemsChanged);
             maxInput.text = simController != null ? simController.GetMaxItems().ToString("0") : "999";
         }
+        if(exitMenu != null)
+        {
+            exitMenu.SetActive(false);
+        }
     }
 
     void Update()
@@ -51,13 +58,20 @@ public class UIController : MonoBehaviour
         UpdateRegisterCountText();
 
         if (Input.GetKeyDown(KeyCode.Tab))
-        {
-            OpenButtonClicked();
-        }
+            if (isMenuActive == false)
+            {
+                {
+                    OpenButtonClicked();
+                }
+            }
+            else
+            {
+                CloseButtonClicked();
+            }
 
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            CloseButtonClicked();
+            exitMenu.SetActive(true);
         }
     }
 
@@ -149,6 +163,7 @@ public class UIController : MonoBehaviour
     {
         GeneralSettingsPanel.SetActive(false);
         openMenuButton.SetActive(true);
+        isMenuActive = false;
 
     }
 
@@ -156,6 +171,7 @@ public class UIController : MonoBehaviour
     {
         openMenuButton.SetActive(false);
         GeneralSettingsPanel.SetActive(true);
+        isMenuActive = true;
     }
 
     public void OnAddRegisterClicked()
@@ -181,7 +197,15 @@ public class UIController : MonoBehaviour
         addRegisterModeOnButton.SetActive(true);
     }
 
-    
+    public void ExitMenuYesClicked()
+    {
+        //simController.StopSimulation(); TODO тут надо доделать чтоьы в меню выходило и симуляция сейвилась наверн
+    }
+
+    public void ExitMenuNoClicked()
+    {
+        exitMenu.SetActive(false);
+    }
     }
     //FIXME это исправить
     /*
@@ -190,12 +214,12 @@ public class UIController : MonoBehaviour
 
     //TODO это сделать
     /*
-    1) панельку кассы
+    1) панельку кассы +
     2) кассы должны сами чиница
     3) хотя бы заглушки для статистики
     4) кассы можно удалять через панельку
-    5) пауза на пробел
-    6) мастабирование камеры на колесико
-    7) прогрессбар для клиента и количество товаров в идеале
+    5) пауза на пробел +
+    6) мастабирование камеры на колесико +
+    7) прогрессбар для клиента и количество товаров в идеале +(прогрессбар)
     
     */
