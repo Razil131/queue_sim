@@ -32,7 +32,16 @@ public class SimulationModel : MonoBehaviour
 
         float deltaTime = Time.deltaTime * timeScale;
         currentTime += deltaTime;
-
+        foreach (ICashRegister reg in Registers){
+            if (reg.Status == RegisterStatus.Broken)
+            {
+                if (reg.NextRepairTime <= currentTime)
+                {
+                    reg.Repair();
+                    Debug.Log("CashRegister "+reg.Id+" was repaired after "+reg.TimeToRepair+" sec");
+                }
+            }
+        }
         for (int i = customers.Count - 1; i >= 0; i--)
         {
             var customer = customers[i];
@@ -106,5 +115,10 @@ public class SimulationModel : MonoBehaviour
         {
             customers.Remove(customer);
         }
+    }
+    
+    public float GetCurrentTime()
+    {
+        return currentTime;
     }
 }

@@ -9,12 +9,19 @@ public class CashRegisterUIPanel : MonoBehaviour
     [SerializeField] private TripleToggle StatusToggle;
     [SerializeField] private Slider itemsInMin;
     [SerializeField] private Slider breakRate;
+    private SimulationController controller;
     private ICashRegister register;
 
-    public void Initialize(ICashRegister register)
+    public void Initialize(ICashRegister register, SimulationController controller)
     {
+        this.controller = controller;
         this.register = register;
         idText.text = register.Id[9..];
+
+        itemsInMin.minValue = 0;
+        itemsInMin.maxValue = 150;
+        itemsInMin.wholeNumbers = true;
+
         Debug.Log($"Initialize called with register: {register?.Id}");
 
         UpdateUI();
@@ -34,9 +41,9 @@ public class CashRegisterUIPanel : MonoBehaviour
     {
         if (register is StaffedCashRegister staffedRegister)
         {
-            Debug.Log($"Current values - ServiceSpeed: {staffedRegister.ServiceSpeed}, BreakProbability: {staffedRegister.BreakProbability}, Status: {staffedRegister.Status}");
+            Debug.Log($"Current values - ServiceSpeed: {staffedRegister.ServiceSpeed*60} per minute, BreakProbability: {staffedRegister.BreakProbability}, Status: {staffedRegister.Status}");
             if (itemsInMin != null)
-                itemsInMin.value = staffedRegister.ServiceSpeed;
+                itemsInMin.value = staffedRegister.ServiceSpeed*60;
 
             if (breakRate != null)
                 breakRate.value = staffedRegister.BreakProbability;
@@ -75,7 +82,7 @@ public class CashRegisterUIPanel : MonoBehaviour
             break;
             case 2:
             if (register is StaffedCashRegister staffedRegister)
-                staffedRegister.BreakDown();
+                staffedRegister.BreakDown(controller.GetCurTime());
             break;
         }
     }
@@ -84,7 +91,7 @@ public class CashRegisterUIPanel : MonoBehaviour
     {
         if(register is StaffedCashRegister staffedRegister)
         {
-            staffedRegister.ServiceSpeed = value;
+            staffedRegister.ServiceSpeed = value/60.0f;
         }
     }
 

@@ -186,7 +186,7 @@ public class CashRegisterPlacer : MonoBehaviour
             return;
         }
 
-        var newRegister = new StaffedCashRegister($"Register_{currentRegisterCount + 1}", QueueType.Normal, 1f, 0.01f);
+        var newRegister = new StaffedCashRegister($"Register_{currentRegisterCount + 1}", QueueType.Normal, 1f, 0.01f, 20);
         Vector3 worldPos = snapGrid.GetRegisterSpawnPosition(gridPos.x, gridPos.y, registerWidth, registerHeight);
         newRegister.Position = worldPos;
 

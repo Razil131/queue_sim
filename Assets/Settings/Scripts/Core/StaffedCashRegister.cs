@@ -14,6 +14,8 @@ public class StaffedCashRegister : ICashRegister
     public QueueType QueueType { get; private set; }
     public float ServiceSpeed { get; set; }
     public float BreakProbability { get; set; }
+    public float TimeToRepair {get; set;}
+    public float NextRepairTime {get; private set;}
     public Queue<Customer> Customers { get; private set; }
      public List<Customer> WalkingCustomers { get; private set; } = new List<Customer>();
     public Customer NowServing { get; private set; }
@@ -22,7 +24,7 @@ public class StaffedCashRegister : ICashRegister
 
 
 
-    public StaffedCashRegister(string id, QueueType queueType, float serviceSpeed, float breakProbability)
+    public StaffedCashRegister(string id, QueueType queueType, float serviceSpeed, float breakProbability, float timeToRepair)
     {
         SPACING_BETWEEN_CUSTOMERS = 1f;
         Id = id;
@@ -31,6 +33,7 @@ public class StaffedCashRegister : ICashRegister
         QueueType = queueType;
         ServiceSpeed = serviceSpeed;
         BreakProbability = breakProbability;
+        TimeToRepair = timeToRepair;
         Customers = new Queue<Customer>();
         QueueDirection = new Vector3(-1f, 0f, 0f);
     }
@@ -127,19 +130,22 @@ public class StaffedCashRegister : ICashRegister
         }
 }
 
-    public void BreakDown()
+    public void BreakDown(float curTime)
     {
-        Status = RegisterStatus.Broken; //TODO раскоменьтить
+        Status = RegisterStatus.Broken;
+        NextRepairTime = curTime+TimeToRepair;
         view?.SetBroken();
         if (NowServing != null)
         {
             NowServing.CurrentRegister = null;
+            NowServing.State = CustomerState.Idle;
             NowServing = null;
         }
 
         foreach (var customer in Customers)
         {
             customer.CurrentRegister = null;
+            customer.State = CustomerState.Idle;
         }
         Customers.Clear();
     }

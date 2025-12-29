@@ -109,7 +109,8 @@ public class SimulationController : MonoBehaviour
                 $"Register_{i + 1}",
                 QueueType.Normal,
                 1f,
-                0.01f
+                0.01f,
+                20
             );
 
             Vector3 basePos = view.GridView.GetRegisterSpawnPosition(startX, startY, registerWidthInCells, registerHeightInCells);
@@ -244,7 +245,7 @@ public class SimulationController : MonoBehaviour
             if (register.Status == RegisterStatus.Open &&
                 UnityEngine.Random.value < register.BreakProbability * Time.deltaTime)
             {
-                register.BreakDown();
+                register.BreakDown(model.GetCurrentTime());
                 OnRegisterBroken?.Invoke();
                 Debug.Log($"Register {register.Id} broke down!");
             }
@@ -302,8 +303,7 @@ public class SimulationController : MonoBehaviour
 
         selectedRegister.IsSelected = true;
     }
-} //TODO не используется, нуждается в доработке, дописать в диаграммы
-
+}
 
     public void SetTimeScale(float scale)
     {
@@ -420,8 +420,13 @@ public class SimulationController : MonoBehaviour
     }
 
     void Start()
-{
-    StartSimulation();
-}
+    {
+        StartSimulation();
+    }
+
+    public float GetCurTime()
+    {
+        return model.GetCurrentTime();
+    }
 
 }

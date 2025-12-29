@@ -62,7 +62,7 @@ public class SimulationView : MonoBehaviour
                         if (panelController != null)
                         {
                             Debug.Log("Found panel controller, initializing...");
-                            panelController.Initialize(register);
+                            panelController.Initialize(register, simulationController);
                         }
                         else
                         {

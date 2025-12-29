@@ -12,6 +12,8 @@ public interface ICashRegister
     QueueType QueueType { get; }
     float ServiceSpeed { get; set; }
     float BreakProbability { get; set; }
+    float TimeToRepair {get; set;}
+    float NextRepairTime {get;}
     Queue<Customer> Customers { get; }
     Customer NowServing { get; }
     float SPACING_BETWEEN_CUSTOMERS { get; }
@@ -24,6 +26,6 @@ public interface ICashRegister
     void Open();
     void ProcessNextCustomer();
     void UpdateQueuePositions();
-    void BreakDown();
+    void BreakDown(float curTime);
     void Repair();
 }

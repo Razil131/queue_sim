@@ -15,7 +15,7 @@ public class Customer
     public float ServiceEndTime { get; set; }
     public ICashRegister CurrentRegister { get; set; }
     public Vector3 TargetPosition { get; private set; }
-    public CustomerState State { get; private set; }
+    public CustomerState State { get; set; }
     public bool AlreadyServed => State == CustomerState.Served;
 
     private readonly SimulationModel _model;
