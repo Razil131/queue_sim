@@ -429,4 +429,13 @@ public class SimulationController : MonoBehaviour
         return model.GetCurrentTime();
     }
 
+    public void RemoveRegister(ICashRegister register)
+    {
+        if(model != null)
+        {
+            model.RemoveRegister(register);
+        }
+        view?.RemoveRegister(register.Id);
+    }
+
 }

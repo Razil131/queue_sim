@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
 using TMPro;
+using System.Xml.Schema;
 
 public class CashRegisterUIPanel : MonoBehaviour
 {
@@ -9,6 +10,11 @@ public class CashRegisterUIPanel : MonoBehaviour
     [SerializeField] private TripleToggle StatusToggle;
     [SerializeField] private Slider itemsInMin;
     [SerializeField] private Slider breakRate;
+    [SerializeField] private Button closeButton;
+    [SerializeField] private TMP_Text itemspermin;
+    [SerializeField] private TMP_Text breakRateText;
+    [SerializeField] private TMP_InputField breakTime;
+    [SerializeField] private Button deleteButton;
     private SimulationController controller;
     private ICashRegister register;
 
@@ -35,13 +41,27 @@ public class CashRegisterUIPanel : MonoBehaviour
             itemsInMin.onValueChanged.AddListener(OnItemsInMinChaged);
         if(breakRate != null)
             breakRate.onValueChanged.AddListener(OnBrakeRateChanged);
+        if(closeButton != null)
+            closeButton.onClick.AddListener(OnCloseButtonClicked);
+        if(breakTime != null)
+            breakTime.onEndEdit.AddListener(OnBreakTimeChanged);
+        if(deleteButton != null)
+            deleteButton.onClick.AddListener(OnDeleteButtonClicked);
+    }
+
+    void Update()
+    {
+        if (gameObject.activeSelf)
+        {
+            UpdateUI();
+        }
     }
 
     public void UpdateUI()
     {
         if (register is StaffedCashRegister staffedRegister)
         {
-            Debug.Log($"Current values - ServiceSpeed: {staffedRegister.ServiceSpeed*60} per minute, BreakProbability: {staffedRegister.BreakProbability}, Status: {staffedRegister.Status}");
+            //Debug.Log($"Current values - ServiceSpeed: {staffedRegister.ServiceSpeed*60} per minute, BreakProbability: {staffedRegister.BreakProbability}, Status: {staffedRegister.Status}");
             if (itemsInMin != null)
                 itemsInMin.value = staffedRegister.ServiceSpeed*60;
 
@@ -55,7 +75,20 @@ public class CashRegisterUIPanel : MonoBehaviour
                 else if (register.Status == RegisterStatus.Broken) index = 2;
                 StatusToggle.SetStateByIndex(index);
             }
-        }
+            if(itemspermin != null)
+            {
+                itemspermin.text = GetItemsInMin().ToString();
+            }
+            if(breakRateText != null)
+            {
+                breakRateText.text = GetBreakRate().ToString("P1");
+            }
+            if(breakTime != null && !breakTime.isFocused)
+            {
+                breakTime.text = GetBreakTime().ToString("0");
+                
+            }
+    }
     }
 
     void OnEnable()
@@ -105,7 +138,51 @@ public class CashRegisterUIPanel : MonoBehaviour
 
     private void OnCloseButtonClicked()
     {
-        
+        this.gameObject.SetActive(false);
+    }
+
+    private float GetItemsInMin()
+    {
+        if(register is StaffedCashRegister staffed)
+            return staffed.ServiceSpeed * 60;
+        return 0f;
+    }
+
+    private float GetBreakRate()
+    {
+        if(register is StaffedCashRegister staffed)
+            return staffed.BreakProbability;
+    return 0f;
+    }
+
+    private float GetBreakTime()
+    {
+        if(register is StaffedCashRegister staffed)
+        {
+            return staffed.TimeToRepair;
+        }
+        return 0f;
+    }
+
+    private void OnBreakTimeChanged(string inputText)
+    {
+        if(int.TryParse(inputText, out int value))
+        {
+            if(register is StaffedCashRegister staffed)
+            {
+                staffed.TimeToRepair = value;
+            }
+        }
+    }
+    
+    private void OnDeleteButtonClicked()
+    {
+        register.Close();
+        if(controller != null && register != null)
+        {
+            controller.RemoveRegister(register);
+        }
+        this.gameObject.SetActive(false);
     }
 
 }

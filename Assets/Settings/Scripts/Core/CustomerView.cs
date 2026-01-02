@@ -13,9 +13,15 @@ public class CustomerView : MonoBehaviour
         simController = controller;
         transform.position = model.Position;
 
+        var collider = GetComponent<Collider2D>();
+        if (collider == null)
+        {
+            collider = gameObject.AddComponent<BoxCollider2D>();
+        }
+        collider.isTrigger = true;
+
         simController?.RegisterCustomerView(this);
     }
-
 
     void Update()
     {
@@ -28,13 +34,22 @@ public class CustomerView : MonoBehaviour
         transform.position = model.Position;
     }
 
-    void OnMouseDown()
+    void OnTriggerStay2D(Collider2D other)
     {
         if (simController == null || model == null) return;
 
         if (!simController.IsDeleteMode)
             return;
 
-        simController.RemoveCustomerSafe(model);
+        if (Input.GetMouseButtonDown(0))
+        {
+            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            mousePos.z = transform.position.z;
+
+            if (GetComponent<Collider2D>()?.bounds.Contains(mousePos) ?? false)
+            {
+                simController.RemoveCustomerSafe(model);
+            }
+        }
     }
 }

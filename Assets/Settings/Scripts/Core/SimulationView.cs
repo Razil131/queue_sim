@@ -139,4 +139,13 @@ public class SimulationView : MonoBehaviour
         }
     }
 
+    public void RemoveRegister(string registerId)
+    {
+        if (registerObjects.ContainsKey(registerId))
+        {
+            Destroy(registerObjects[registerId]);
+            registerObjects.Remove(registerId);
+        }
+    }
+
 }

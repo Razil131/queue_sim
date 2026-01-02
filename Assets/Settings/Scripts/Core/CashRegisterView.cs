@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class CashRegisterView : MonoBehaviour
 {
@@ -44,6 +45,12 @@ public class CashRegisterView : MonoBehaviour
 
     void OnMouseDown()
     {
+
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+        {
+            return;
+        }
+        Debug.Log("CashRegister clicked");
         GameObject panel = GetUIPanel();
         if (panel != null)
         {
