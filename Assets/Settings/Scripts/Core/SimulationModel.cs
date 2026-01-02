@@ -99,6 +99,7 @@ public class SimulationModel : MonoBehaviour
     {
         if (register != null && registers.Contains(register))
         {
+            register.Close();
             registers.Remove(register);
         }
     }

@@ -18,11 +18,7 @@ public class SimulationController : MonoBehaviour
     private float timeSinceLastSpawn = 0f;
     private int customerCounter = 0;
     public UnityEvent OnCustomerServed;
-    public UnityEvent OnCustomerLeft;
-    public UnityEvent OnRegisterBroken;
-    public UnityEvent OnSimulationStarted;
-    public UnityEvent OnSimulationPaused;
-    public UnityEvent OnSimulationReset;
+    public StatisticController statisticController = new StatisticController();
     public bool IsDeleteMode => isDeleteMode;
 
     public SimulationView View => view;
@@ -30,11 +26,7 @@ public class SimulationController : MonoBehaviour
     void Awake()
     {
         OnCustomerServed ??= new UnityEvent();
-        OnCustomerLeft ??= new UnityEvent();
-        OnRegisterBroken ??= new UnityEvent();
-        OnSimulationStarted ??= new UnityEvent();
-        OnSimulationPaused ??= new UnityEvent();
-        OnSimulationReset ??= new UnityEvent();
+        OnCustomerServed.AddListener(AddCustomerServedToStatistic);
 
         if (model == null)
         {
@@ -45,6 +37,13 @@ public class SimulationController : MonoBehaviour
             }
         }
     }
+    
+    void AddCustomerServedToStatistic()
+    {
+        // statisticController.CustomerServed();
+    }
+
+
 
     void Update()
     {
@@ -155,7 +154,6 @@ public class SimulationController : MonoBehaviour
         var ui = FindAnyObjectByType<UIController>();
         ui?.UpdateRegisterCountText();
         
-        OnSimulationStarted?.Invoke();
         Debug.Log("Simulation started");
     }
 
@@ -167,7 +165,6 @@ public class SimulationController : MonoBehaviour
             model.IsPaused = isPaused;
         }
         
-        OnSimulationPaused?.Invoke();
         Debug.Log(isPaused ? "Simulation PAUSED" : "Simulation RESUMED");
     }
 
@@ -203,7 +200,6 @@ public class SimulationController : MonoBehaviour
         model.Customers.Clear();
         customerViews.Clear();
 
-        OnSimulationReset?.Invoke();
         Debug.Log("Simulation reset");
     }
 
@@ -246,7 +242,6 @@ public class SimulationController : MonoBehaviour
                 UnityEngine.Random.value < register.BreakProbability * Time.deltaTime)
             {
                 register.BreakDown(model.GetCurrentTime());
-                OnRegisterBroken?.Invoke();
                 Debug.Log($"Register {register.Id} broke down!");
             }
         }

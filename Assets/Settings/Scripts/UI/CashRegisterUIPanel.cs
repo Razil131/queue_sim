@@ -177,7 +177,6 @@ public class CashRegisterUIPanel : MonoBehaviour
     
     private void OnDeleteButtonClicked()
     {
-        register.Close();
         if(controller != null && register != null)
         {
             controller.RemoveRegister(register);

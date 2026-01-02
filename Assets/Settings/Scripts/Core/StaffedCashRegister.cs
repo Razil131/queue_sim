@@ -54,13 +54,21 @@ public class StaffedCashRegister : ICashRegister
         if (NowServing != null)
         {
             NowServing.CurrentRegister = null;
+            NowServing.State = CustomerState.Idle;
             NowServing = null;
         }
 
         foreach (var customer in Customers)
         {
             customer.CurrentRegister = null;
+            customer.State = CustomerState.Idle;
         }
+
+        foreach (var customer in WalkingCustomers)
+        {
+            customer.State = CustomerState.Idle;
+        }
+        WalkingCustomers.Clear();
         Customers.Clear();
     }
     public void Open()
@@ -147,6 +155,12 @@ public class StaffedCashRegister : ICashRegister
             customer.CurrentRegister = null;
             customer.State = CustomerState.Idle;
         }
+
+        foreach (var customer in WalkingCustomers)
+        {
+            customer.State = CustomerState.Idle;
+        }
+        WalkingCustomers.Clear();
         Customers.Clear();
     }
 
