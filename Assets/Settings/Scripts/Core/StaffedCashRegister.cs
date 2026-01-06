@@ -11,7 +11,7 @@ public class StaffedCashRegister : ICashRegister
     public Vector3 QueueDirection { get; set; }
     public RegisterType Type { get; private set; }
     public RegisterStatus Status { get; private set; }
-    public QueueType QueueType { get; private set; }
+    public QueueType QueueType { get; set; }
     public float ServiceSpeed { get; set; }
     public float BreakProbability { get; set; }
     public float TimeToRepair {get; set;}

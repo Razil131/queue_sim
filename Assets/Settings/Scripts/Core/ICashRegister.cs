@@ -9,7 +9,7 @@ public interface ICashRegister
     Vector3 QueueDirection { get; set; }
     RegisterType Type { get; }
     RegisterStatus Status { get; }
-    QueueType QueueType { get; }
+    QueueType QueueType { get; set; }
     float ServiceSpeed { get; set; }
     float BreakProbability { get; set; }
     float TimeToRepair {get; set;}

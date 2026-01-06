@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Events;
 using System.Collections.Generic;
+using SFB;
 
 public class SimulationController : MonoBehaviour
 {
@@ -15,6 +16,7 @@ public class SimulationController : MonoBehaviour
     [SerializeField] private int maxItems = 20;
     [SerializeField] private bool isDeleteMode = false;
     [SerializeField] private int CheckoutMax = 32;
+    private CashRegisterSettings Clipboard;
     private float timeSinceLastSpawn = 0f;
     private int customerCounter = 0;
     public UnityEvent OnCustomerServed;
@@ -287,18 +289,18 @@ public class SimulationController : MonoBehaviour
     }
 
     public void OnRegisterClicked(string registerId)
-{
-    ICashRegister selectedRegister = model.Registers.Find(r => r.Id == registerId);
-    if (selectedRegister != null)
     {
-        foreach (var reg in model.Registers)
+        ICashRegister selectedRegister = model.Registers.Find(r => r.Id == registerId);
+        if (selectedRegister != null)
         {
-               reg.IsSelected = false; 
-        }
+            foreach (var reg in model.Registers)
+            {
+                reg.IsSelected = false; 
+            }
 
-        selectedRegister.IsSelected = true;
+            selectedRegister.IsSelected = true;
+        }
     }
-}
 
     public void SetTimeScale(float scale)
     {
@@ -433,4 +435,87 @@ public class SimulationController : MonoBehaviour
         view?.RemoveRegister(register.Id);
     }
 
+
+
+    public void SaveSimulation()
+    {
+        if (model == null)
+        {
+            Debug.LogError("Cannot save: model is null");
+            return;
+        }
+
+        string path = StandaloneFileBrowser.SaveFilePanel(
+            "Save Simulation",
+            "",
+            "simulation",
+            "json"
+        );
+
+        if (string.IsNullOrEmpty(path))
+        {
+            Debug.Log("Save canceled");
+            return;
+        }
+
+        SimulationSaveSystem.Save(this, path);
+    }
+
+    public void LoadSimulation()
+    {
+        string[] paths = StandaloneFileBrowser.OpenFilePanel(
+            "Load Simulation",
+            "",
+            "json",
+            false
+        );
+
+        if (paths == null || paths.Length == 0)
+        {
+            Debug.Log("Load canceled");
+            return;
+        }
+
+        SimulationSaveSystem.Load(this, paths[0]);
+    }
+
+    public void CopyRegisterToClipboard(ICashRegister reg)
+    {
+        Clipboard = new CashRegisterSettings(
+            reg.Status,
+            reg.QueueDirection,
+            reg.QueueType,
+            reg.ServiceSpeed,
+            reg.BreakProbability,
+            reg.TimeToRepair
+        );
+        Debug.Log("Register settings was copied");
+    }
+    public void PasteFromClipboard(ICashRegister reg)
+    {
+
+        if (Clipboard == null)
+        {
+            Debug.LogWarning("Clipboard is empty");
+            return;
+        }
+        reg.QueueDirection = Clipboard.QueueDirection;
+        if (Clipboard.Status == RegisterStatus.Closed)
+        {
+            reg.Close();
+        }
+        else if (Clipboard.Status == RegisterStatus.Open)
+        {
+            reg.Open();
+        }
+        else if (Clipboard.Status == RegisterStatus.Broken)
+        {
+            reg.BreakDown(model.CurrentTime);
+        }
+        reg.QueueType = Clipboard.QueueType;
+        reg.ServiceSpeed = Clipboard.ServiceSpeed;
+        reg.BreakProbability = Clipboard.BreakProbability;
+        reg.TimeToRepair = Clipboard.TimeToRepair;
+        Debug.Log("Register settings was pasted");
+    }
 }

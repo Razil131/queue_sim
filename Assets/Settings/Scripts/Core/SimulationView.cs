@@ -148,4 +148,28 @@ public class SimulationView : MonoBehaviour
         }
     }
 
+    public void ClearRegisters()
+    {
+        foreach (var obj in registerObjects.Values)
+        {
+            if (obj != null)
+                Destroy(obj);
+        }
+
+        registerObjects.Clear();
+
+        Debug.Log("Registers cleared");
+    }
+
+    public void ClearCustomers()
+    {
+        foreach (var obj in customerObjects.Values)
+        {
+            if (obj != null)
+                Destroy(obj);
+        }
+
+        customerObjects.Clear();
+    }
+
 }
