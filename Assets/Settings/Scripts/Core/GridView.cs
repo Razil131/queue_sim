@@ -28,7 +28,15 @@ public class GridView : MonoBehaviour
                 Vector3 worldPos = GetCellWorldPosition(x, y);
                 GameObject cell = Instantiate(cellPrefab, worldPos, Quaternion.identity, transform);
                 cell.name = $"Cell_{x}_{y}";
+
+                SpriteRenderer sr = cell.GetComponent<SpriteRenderer>();
+                if (sr != null)
+                {
+                    sr.sortingOrder = 0;
+                }
             }
+
+            
         }
     }
 

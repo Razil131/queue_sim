@@ -149,7 +149,10 @@ public class SimulationController : MonoBehaviour
     public void StartSimulation()
     {
         view.RenderGrid();
-        SpawnRegisters();
+        if(model.Registers.Count == 0)
+        {
+            SpawnRegisters();
+        }
         isRunning = true;
         isPaused = false;
         
@@ -463,6 +466,7 @@ public class SimulationController : MonoBehaviour
 
     public void LoadSimulation()
     {
+        model.ClearRegisters();
         string[] paths = StandaloneFileBrowser.OpenFilePanel(
             "Load Simulation",
             "",

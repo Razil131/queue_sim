@@ -15,6 +15,8 @@ public class CashRegisterUIPanel : MonoBehaviour
     [SerializeField] private TMP_Text breakRateText;
     [SerializeField] private TMP_InputField breakTime;
     [SerializeField] private Button deleteButton;
+    [SerializeField] private Button copyButton;
+    [SerializeField] private Button pasteButton;
     private SimulationController controller;
     private ICashRegister register;
 
@@ -47,6 +49,10 @@ public class CashRegisterUIPanel : MonoBehaviour
             breakTime.onEndEdit.AddListener(OnBreakTimeChanged);
         if(deleteButton != null)
             deleteButton.onClick.AddListener(OnDeleteButtonClicked);
+        if(copyButton != null)
+            copyButton.onClick.AddListener(OnCopyButtonClicked);
+        if(pasteButton != null)
+            pasteButton.onClick.AddListener(OnPasteButtonClicked);
     }
 
     void Update()
@@ -88,6 +94,7 @@ public class CashRegisterUIPanel : MonoBehaviour
                 breakTime.text = GetBreakTime().ToString("0");
                 
             }
+
     }
     }
 
@@ -182,6 +189,21 @@ public class CashRegisterUIPanel : MonoBehaviour
             controller.RemoveRegister(register);
         }
         this.gameObject.SetActive(false);
+    }
+
+    private void OnCopyButtonClicked()
+    {
+        if(register is StaffedCashRegister staffed){
+        controller.CopyRegisterToClipboard(staffed);
+        }
+    }
+
+    private void OnPasteButtonClicked()
+    {
+        if(register is StaffedCashRegister staffed)
+        {
+            controller.PasteFromClipboard(staffed);
+        }
     }
 
 }

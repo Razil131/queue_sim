@@ -56,7 +56,8 @@ public class CameraController : MonoBehaviour
         if (isDragging)
         {
             Vector3 delta = Input.mousePosition - lastMousePosition;
-            Vector3 move = new Vector3(-delta.x * panSpeed * Time.deltaTime, -delta.y * panSpeed * Time.deltaTime, 0);
+            float currentPanSpeed = panSpeed * (cam.orthographicSize / 10f);
+            Vector3 move = new Vector3(-delta.x * currentPanSpeed * Time.deltaTime, -delta.y * panSpeed * Time.deltaTime, 0);
             transform.position += move;
 
             float clampedX = Mathf.Clamp(transform.position.x, minBounds.x, maxBounds.x);

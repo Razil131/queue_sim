@@ -122,4 +122,12 @@ public class SimulationModel : MonoBehaviour
     {
         return currentTime;
     }
+
+    public void ClearRegisters()
+    {
+        while (registers.Count > 0)
+        {
+            RemoveRegister(registers[0]);
+        }
+    }
 }

@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class UIController : MonoBehaviour
 {
@@ -199,13 +200,17 @@ public class UIController : MonoBehaviour
 
     public void ExitMenuYesClicked()
     {
-        //simController.StopSimulation(); TODO тут надо доделать чтоьы в меню выходило и симуляция сейвилась наверн
+        simController.SaveSimulation();
+        SceneManager.LoadScene("MainMenu");
     }
 
     public void ExitMenuNoClicked()
     {
         exitMenu.SetActive(false);
     }
+
+
+
     }
     //FIXME это исправить
     /*

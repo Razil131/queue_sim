@@ -1,0 +1,26 @@
+{
+    "customerSpawnInterval": 5.0,
+    "minItems": 1,
+    "maxItems": 20,
+    "timeScale": 1.0,
+    "registers": [
+        {
+            "id": "Register_1",
+            "type": 0,
+            "position": {
+                "x": 21.5,
+                "y": 10.0,
+                "z": 0.0
+            },
+            "queueDirection": {
+                "x": -1.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "serviceSpeed": 1.0,
+            "breakProbability": 0.009999999776482582,
+            "timeToRepair": 20.0,
+            "status": 0
+        }
+    ]
+}

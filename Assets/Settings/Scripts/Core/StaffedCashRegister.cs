@@ -232,6 +232,9 @@ public class StaffedCashRegister : ICashRegister
 
     public void SetProgress()
     {
+        if (view != null)
+    {
         view.SetProgress(GetProgress());
     }
-}
+    }
+    }

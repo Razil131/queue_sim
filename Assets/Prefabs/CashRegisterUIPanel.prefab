@@ -721,6 +721,11 @@ MonoBehaviour:
   StatusToggle: {fileID: 3903898561909436844}
   itemsInMin: {fileID: 6334295917109665864}
   breakRate: {fileID: 5095718906957315173}
+  closeButton: {fileID: 0}
+  itemspermin: {fileID: 0}
+  breakRateText: {fileID: 0}
+  breakTime: {fileID: 0}
+  deleteButton: {fileID: 0}
 --- !u!1 &771073371329075727
 GameObject:
   m_ObjectHideFlags: 0
